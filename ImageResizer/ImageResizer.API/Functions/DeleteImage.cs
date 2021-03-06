@@ -10,31 +10,39 @@ using System.Threading.Tasks;
 
 namespace ImageResizer.API.Functions
 {
-    public class GetAllImages
+    public class DeleteImage
     {
-        private readonly ILogger<GetAllImages> _logger;
+        private readonly ILogger<DeleteImage> _logger;
         private readonly CosmosTableService<ImageEntity> _cosmosTableService;
 
-        public GetAllImages(
-            ILogger<GetAllImages> logger,
+        public DeleteImage(
+            ILogger<DeleteImage> logger,
             CosmosTableService<ImageEntity> cosmosTableService)
         {
             _logger = logger;
             _cosmosTableService = cosmosTableService;
         }
 
-        [FunctionName(nameof(GetAllImages))]
+        [FunctionName(nameof(DeleteImage))]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Images")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Image/{id}")] HttpRequest req,
+            string id)
         {
             IActionResult result;
 
             try
             {
-                // TODO: pass in username once authentication is working
-                var results = await _cosmosTableService.RetrieveAllImagesForUser("will");
+                var imageEntity = await _cosmosTableService.RetrieveEntity("will", id);
 
-                result = new OkObjectResult(results);
+                if (imageEntity == null)
+                {
+                    result = new StatusCodeResult(StatusCodes.Status404NotFound);
+                }
+                else
+                {
+                    await _cosmosTableService.DeleteEntity(imageEntity);
+                    result = new StatusCodeResult(StatusCodes.Status204NoContent);
+                }
             }
             catch (Exception ex)
             {

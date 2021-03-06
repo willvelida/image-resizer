@@ -33,6 +33,20 @@ namespace ImageResizer.API.Services
             return returnedValue;
         }
 
+        public virtual async Task<T> RetrieveEntity(string username, string id)
+        {
+            var retrieveOperation = TableOperation.Retrieve<T>(username, id);
+            TableResult result = await CloudTable.ExecuteAsync(retrieveOperation);
+            var returnedValue = result.Result as T;
+            return returnedValue;
+        }
+
+        public virtual async Task DeleteEntity(T entityToDelete)
+        {
+            var deleteOperation = TableOperation.Delete(entityToDelete);
+            TableResult result = await CloudTable.ExecuteAsync(deleteOperation);
+        }
+
         public virtual async Task<List<ImageDTO>> RetrieveAllImagesForUser(string username)
         {
             List<ImageDTO> imageDTOs = new List<ImageDTO>();
@@ -48,7 +62,7 @@ namespace ImageResizer.API.Services
                 token = segment.ContinuationToken;
                 foreach (ImageEntity entity in segment)
                 {
-                    ImageDTO imageDTO = new ImageDTO { Username = entity.PartitionKey, ImageUrl = entity.RowKey };
+                    ImageDTO imageDTO = new ImageDTO { Id = entity.RowKey, Username = entity.PartitionKey, ImageUrl = entity.ImageUrl };
                     imageDTOs.Add(imageDTO);
                 }
             } while (token != null);

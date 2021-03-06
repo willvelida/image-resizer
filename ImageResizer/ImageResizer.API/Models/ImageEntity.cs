@@ -1,7 +1,4 @@
 ﻿using Microsoft.Azure.Cosmos.Table;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ImageResizer.API.Models
 {
@@ -12,10 +9,12 @@ namespace ImageResizer.API.Models
 
         }
 
-        public ImageEntity(string username, string pictureUrl)
+        public ImageEntity(string username, string id)
         {
             PartitionKey = username;
-            RowKey = pictureUrl;
+            RowKey = id;
         }
+
+        public string ImageUrl { get; set; }
     }
 }

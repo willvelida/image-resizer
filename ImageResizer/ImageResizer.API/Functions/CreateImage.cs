@@ -1,14 +1,14 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using ImageResizer.API.Models;
+using ImageResizer.API.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ImageResizer.API.Services;
-using ImageResizer.API.Models;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace ImageResizer.API.Functions
 {
@@ -37,8 +37,12 @@ namespace ImageResizer.API.Functions
 
                 var imageRequestObject = JsonConvert.DeserializeObject<ImageDTO>(input);
 
-                var imageEntity = new ImageEntity(imageRequestObject.Username, imageRequestObject.ImageUrl);
-
+                var imageEntity = new ImageEntity
+                {
+                    PartitionKey = imageRequestObject.Username,
+                    RowKey = Guid.NewGuid().ToString(),
+                    ImageUrl = imageRequestObject.ImageUrl
+                };
 
                 if (imageEntity.PartitionKey == null || imageEntity.RowKey == null)
                 {
@@ -50,7 +54,7 @@ namespace ImageResizer.API.Functions
                     await _cosmosTableService.InsertOrMerge(imageEntity);
 
                     result = new StatusCodeResult(StatusCodes.Status201Created);
-                }              
+                }
             }
             catch (Exception ex)
             {
