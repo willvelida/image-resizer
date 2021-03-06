@@ -1,5 +1,7 @@
-﻿using Microsoft.Azure.Cosmos.Table;
+﻿using ImageResizer.API.Models;
+using Microsoft.Azure.Cosmos.Table;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ImageResizer.API.Services
@@ -29,6 +31,29 @@ namespace ImageResizer.API.Services
             var result = await CloudTable.ExecuteAsync(insertOrReplaceOperation);
             var returnedValue = result.Result as T;
             return returnedValue;
+        }
+
+        public virtual async Task<List<ImageDTO>> RetrieveAllImagesForUser(string username)
+        {
+            List<ImageDTO> imageDTOs = new List<ImageDTO>();
+
+            TableQuery<ImageEntity> imageScanQuery = new TableQuery<ImageEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, username));
+
+            TableContinuationToken token = null;
+
+            do
+            {
+                TableQuerySegment<ImageEntity> segment = await CloudTable.ExecuteQuerySegmentedAsync(imageScanQuery, token);
+                token = segment.ContinuationToken;
+                foreach (ImageEntity entity in segment)
+                {
+                    ImageDTO imageDTO = new ImageDTO { Username = entity.PartitionKey, ImageUrl = entity.RowKey };
+                    imageDTOs.Add(imageDTO);
+                }
+            } while (token != null);
+
+            return imageDTOs;
         }
 
         private CloudTable CloudTable
