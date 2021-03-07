@@ -41,6 +41,7 @@ namespace ImageResizer.API.Functions
                 else
                 {
                     await _cosmosTableService.DeleteEntity(imageEntity);
+                    _logger.LogInformation($"Image with ID:{imageEntity.RowKey} successfully deleted");
                     result = new StatusCodeResult(StatusCodes.Status204NoContent);
                 }
             }

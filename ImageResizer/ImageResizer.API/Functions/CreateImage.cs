@@ -48,7 +48,9 @@ namespace ImageResizer.API.Functions
                     ImageUrl = imageRequestObject.ImageUrl
                 };
 
-                if (imageEntity.PartitionKey == null || imageEntity.RowKey == null)
+                if (imageEntity.PartitionKey == null 
+                    || imageEntity.RowKey == null
+                    || imageEntity.ImageUrl == null)
                 {
                     _logger.LogError("The image create request was in a incorrect format");
                     result = new StatusCodeResult(StatusCodes.Status400BadRequest);
@@ -56,9 +58,12 @@ namespace ImageResizer.API.Functions
                 else
                 {
                     await _cosmosTableService.InsertOrMerge(imageEntity);
+                    _logger.LogInformation($"Image with ID:{imageEntity.RowKey} Name:{imageEntity.ImageUrl} successfully inserted into database");
 
                     var imageMessage = JsonConvert.SerializeObject(imageEntity);
                     await _queueClient.SendMessageAsync(imageMessage);
+                    _logger.LogInformation($"Message with Image ID:{imageEntity.RowKey} sent to queue");
+
                     result = new StatusCodeResult(StatusCodes.Status201Created);
                 }
             }
