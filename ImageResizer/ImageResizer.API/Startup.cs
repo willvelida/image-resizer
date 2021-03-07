@@ -1,4 +1,5 @@
-﻿using ImageResizer.API;
+﻿using Azure.Storage.Queues;
+using ImageResizer.API;
 using ImageResizer.API.Models;
 using ImageResizer.API.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ namespace ImageResizer.API
 
             builder.Services.AddSingleton<IConfiguration>(config);
             builder.Services.AddSingleton((s) => new CosmosTableService<ImageEntity>(config["StorageConnectionString"], config["TableName"]));
+            builder.Services.AddSingleton((s) => new QueueClient(config["QueueStorageConnectionString"], config["QueueName"]));
         }
     }
 }

@@ -1,3 +1,4 @@
+using Azure.Storage.Queues;
 using ImageResizer.API.Models;
 using ImageResizer.API.Services;
 using Microsoft.AspNetCore.Http;
@@ -16,18 +17,21 @@ namespace ImageResizer.API.Functions
     {
         private readonly ILogger<CreateImage> _logger;
         private readonly CosmosTableService<ImageEntity> _cosmosTableService;
+        private readonly QueueClient _queueClient;
 
         public CreateImage(
             ILogger<CreateImage> logger,
-            CosmosTableService<ImageEntity> cosmosTableService)
+            CosmosTableService<ImageEntity> cosmosTableService,
+            QueueClient queueClient)
         {
             _logger = logger;
             _cosmosTableService = cosmosTableService;
+            _queueClient = queueClient;
         }
 
         [FunctionName(nameof(CreateImage))]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Resize")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Image")] HttpRequest req)
         {
             IActionResult result;
 
@@ -53,6 +57,8 @@ namespace ImageResizer.API.Functions
                 {
                     await _cosmosTableService.InsertOrMerge(imageEntity);
 
+                    var imageMessage = JsonConvert.SerializeObject(imageEntity);
+                    await _queueClient.SendMessageAsync(imageMessage);
                     result = new StatusCodeResult(StatusCodes.Status201Created);
                 }
             }

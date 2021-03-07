@@ -25,7 +25,7 @@ namespace ImageResizer.API.Functions
 
         [FunctionName(nameof(GetAllImages))]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Images")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Image")] HttpRequest req)
         {
             IActionResult result;
 
